@@ -1,0 +1,46 @@
+<?xml  version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:lang="http://www.springframework.org/schema/lang"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop  http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/jee   http://www.springframework.org/schema/jee/spring-jee.xsd
+        http://www.springframework.org/schema/lang  http://www.springframework.org/schema/lang/spring-lang.xsd
+        http://www.springframework.org/schema/tx  http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd">
+
+        
+        <!-- MongoDB Database configuration host and port -->
+        <!-- MongoDB 주소 및 포트, ID:password@DB이름, RoboMongo에서도 같은 계정으로 접근 가능, MongoDB를 접근하는 권한은 이 계정에만 있음 -->
+        <mongo:mongo-client host="127.0.0.1" port="27117" credentials="admin:pedigreeadmin@PedigreeSystem">
+        <mongo:client-options connections-per-host="8"
+                   threads-allowed-to-block-for-connection-multiplier="4"
+                   connect-timeout="1000"
+                   max-wait-time="1500"
+                   socket-keep-alive="true"
+                   socket-timeout="1500" />
+  		</mongo:mongo-client>
+        
+        <!-- Define the mongoDbFactory with your database Name  -->
+        <!-- Spring에서 제공하는 MongoDB를 접근하기 위한 인터페이스 -->
+		<mongo:db-factory dbname="PedigreeSystem" mongo-ref="mongo" id="mongoDbFactory"/>
+ 
+ 		<!-- Define the MongoTemplate  -->
+ 		<!-- Spring에서 제공하는 create, update, delete, query operation을 제공하는 MongoTemplete, thread-safe 특성, -->
+ 		<!-- "find", "findAndModify", "findOne", "insert", "remove", "save", "update"등의 API를 바로 사용 가능하도록 함 -->
+		<beans:bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+			<beans:constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+		</beans:bean>  
+
+ 		<!-- Base package to scan the mongo repositories, where we create de DAOS to access data and domain objects -->
+        <mongo:repositories base-package="kaist.gs1.pms" />
+</beans:beans>
