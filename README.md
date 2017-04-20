@@ -23,7 +23,7 @@
 - 
 - 
 
-### Temporary Server for Oliot EPCIS ###
+### Temporary Server for Oliot AgrifoodPedigree ###
 > 
 
 ### Specification ###
