@@ -6,7 +6,7 @@
 ### Introduction ###
 > Agrifood pedigree service enables to generate and update pedigrees for food safety
 
-> Each partner in the supply chain should operate this service to ensure reliability of the pedigree
+> Each partner in the supply chain should operate this service to ensure reliability of products
 
 > The pedigrees are transfered from one partner to another along with movement of product
 
