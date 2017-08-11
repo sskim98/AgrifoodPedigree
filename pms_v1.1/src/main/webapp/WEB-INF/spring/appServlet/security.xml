@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.1.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.8.xsd">
+
+	<!-- @PreAuthorize, @PostAuthorize, @PreFilter, @PostFilter 사용 -->
+	<global-method-security pre-post-annotations="enabled" authentication-manager-ref="x509AuthenticationManager"/> 
+	
+	<!-- secure the application´s urls with the specific Role -->
+	<!-- <http pattern="/sslTest" use-expressions="true" auto-config="true" authentication-manager-ref="customAuthenticationProvider" entry-point-ref="forbiddenAuthEntryPoint"> -->
+	<!-- 인증을  forbiddenAuthEntryPoint에서 수행 -->
+	<!-- import에 대해 모든 접근을 허용하며 https의 경우만 허용, form으로 보내지만 csrf를 비활성하여 csrf 처리 없이 pedigree를 전송할 수 있도록 함 -->
+	<http pattern="/import" use-expressions="true" auto-config="true" entry-point-ref="forbiddenAuthEntryPoint"> 
+		<!-- custom X.509 filter  -->
+		<!-- <custom-filter position="X509_FILTER" ref="myX509AuthenticationFilter" /> -->
+		<intercept-url pattern="/" access="permitAll" method="POST" requires-channel="https"/> <!-- 모든 https에 대해 허용 -->
+		<csrf disabled="true"/> <!-- https로 전송되는 form에 대해 csrf 비활성화 -->
+		<!-- <x509 subject-principal-regex="CN=(.*?)," user-service-ref="httpsUserDetailsService" /> -->
+	</http>
+	<http pattern="/test" use-expressions="true" auto-config="true" entry-point-ref="forbiddenAuthEntryPoint"> 
+		<!-- custom X.509 filter  -->
+		<!-- <custom-filter position="X509_FILTER" ref="myX509AuthenticationFilter" /> -->
+		<intercept-url pattern="/" access="permitAll" method="GET" requires-channel="https"/> <!-- 모든 https에 대해 허용 -->
+		<csrf disabled="true"/> <!-- https로 전송되는 form에 대해 csrf 비활성화 -->
+		<!-- <x509 subject-principal-regex="CN=(.*?)," user-service-ref="httpsUserDetailsService" /> -->
+	</http>
+	<http use-expressions="true" auto-config="true" authentication-manager-ref="loginAuthenticationManager">
+		<!-- <access-denied-handler error-page="/accessdenied"/> -->
+		<intercept-url access="permitAll" pattern="/pathSearch"/>
+		<intercept-url access="permitAll" pattern="/pedigreeSearch"/>
+		<intercept-url access="permitAll" pattern="/login"/>
+		<intercept-url access="permitAll" pattern="/logout"/>
+		<intercept-url access="permitAll" pattern="/signup"/>
+		<intercept-url access="permitAll" pattern="/accessdenied"/>
+		<intercept-url access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_CAMPAIGN')" pattern="/listCampaigns"/>
+		<intercept-url access="hasRole('ROLE_USER', 'ROLE_ADMIN')" pattern="/listUsers"/>
+		<intercept-url access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_CAMPAIGN')" pattern="/menu"/>
+		<intercept-url access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN', 'ROLE_CAMPAIGN')" pattern="/*" requires-channel="any"/>
+		<form-login login-processing-url="/j_spring_security_check"
+					authentication-failure-url="/accessdenied"
+					default-target-url="/menu"
+					login-page="/login"
+					password-parameter="j_password"
+					username-parameter="j_userid"/> 
+		<!-- form login에 대해 기본 로그인 모듈 사용, 로그인 거절되었을때 /accessdenied 표시, 로그인 허용 되었을 때 /menu 표시, 로그인 페이지 /login, etc. -->
+		<logout logout-url="/j_spring_security_logout" logout-success-url="/logout"/>
+	</http>
+	
+	<!-- login에 대해 service_UserDetails 모듈 사용 -->
+	<authentication-manager id="loginAuthenticationManager"> 
+		<authentication-provider user-service-ref="service_UserDetails">
+			<password-encoder hash="plaintext" />
+		</authentication-provider>
+	</authentication-manager>
+	
+	<!-- 
+	<beans:bean id="customAuthenticationProvider" class="kaist.gs1.pms.MyAuthProvider"/>
+	<authentication-manager id="x509AuthenticationManager">
+		<authentication-provider ref="customAuthenticationProvider">
+		</authentication-provider> 
+	</authentication-manager>
+	-->
+	
+	<!-- forbiddenAuthEntryPoint는 loginAuthenticationManager에서 인증이 거절되었을때 동작 -->
+	<beans:bean id="forbiddenAuthEntryPoint" class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint" /> 
+ 
+ <!-- 
+   <beans:bean id="myX509AuthenticationFilter" class="org.springframework.security.web.authentication.preauth.x509.X509AuthenticationFilter">
+      <beans:property name="principalExtractor">
+         <beans:bean class="kaist.gs1.pms.MyX509PrincipalExtractor" />
+      </beans:property>
+      <beans:property name="authenticationManager" ref="x509AuthenticationManager" />
+   </beans:bean>
+     -->
+	<!--  XML에 각각 빈 등록을 하지않고 각 클래스에 @Component 어노테이션을 통해 자동 빈 등록. @Component 어노테이션을 클래스에 작성하면 빈 스캐너를 통해 자동 빈 등록 -->
+	<context:component-scan base-package="kaist.gs1.pms" />
+	
+</beans:beans>
